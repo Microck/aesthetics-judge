@@ -1,0 +1,12 @@
+# API Worker (feed + AcoustID proxy). The static site deploys to Netlify.
+name = "aesthetics-judge-api"
+main = "api/index.ts"
+compatibility_date = "2026-10-01"
+
+[vars]
+SITE_ORIGIN = "https://music.micr.dev"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "aesthetics-judge"
+database_id = "3163cf47-3ffa-4f06-8aa3-3ce66b4a9f11"

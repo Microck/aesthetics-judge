@@ -1,0 +1,8 @@
+node_modules
+dist
+.wrangler
+# 126MB model lives on Hugging Face in production; local copy is for dev only.
+public/models/*.onnx
+.dev.vars
+.env.production
+*.tsbuildinfo

@@ -1,0 +1,13 @@
+{
+  "name": "aesthetics judge",
+  "short_name": "aesthetics judge",
+  "description": "Meta's Audiobox Aesthetics model listens to a whole song and scores it, in your browser.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#222222",
+  "theme_color": "#222222",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

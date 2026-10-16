@@ -1,0 +1,33 @@
+{
+  "name": "aesthetics-judge",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "bun run typecheck && vite build",
+    "typecheck": "tsc -p tsconfig.json && tsc -p api/tsconfig.json",
+    "db:local": "wrangler d1 execute aesthetics-judge --local --file=schema.sql",
+    "build:prod": "bun run build && rm -rf dist/models",
+    "api": "wrangler dev --port 8787 --var SITE_ORIGIN:http://127.0.0.1:5173"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.9.0",
+    "motion": "^14.3.0",
+    "music-metadata": "^12.2.1",
+    "onnxruntime-web": "^1.30.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "rusty-chromaprint-wasm": "^0.1.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261016.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "wrangler": "^4.151.1"
+  }
+}

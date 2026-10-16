@@ -1,0 +1,12 @@
+[project]
+name = "aesthetics-judge-tools"
+version = "0.1.0"
+description = "Model export and asset scripts for music.micr.dev (tools/)"
+requires-python = ">=3.11"
+dependencies = [
+    "audiobox-aesthetics>=0.0.4",
+    "onnx>=1.17",
+    "onnxruntime>=1.20",
+    "pillow>=12.3.0",
+    "requests>=2.34.2",
+]
