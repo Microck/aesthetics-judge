@@ -20,6 +20,17 @@ function ago(timestamp: number) {
   return hours < 24 ? `${hours}h` : `${Math.round(hours / 24)}d`;
 }
 
+// Search links rather than direct track links: they need no stored IDs or
+// Spotify credentials, work for every past entry, and land on the right song
+// whenever the title and artist are right (which the catalog match ensures).
+function listenLinks(item: FeedItem): [string, string][] {
+  const query = encodeURIComponent(`${item.artist} ${item.title}`);
+  return [
+    ["spotify", `https://open.spotify.com/search/${query}`],
+    ["youtube", `https://www.youtube.com/results?search_query=${query}`],
+  ];
+}
+
 function Cover({ item, className }: { item: FeedItem; className: string }) {
   return item.cover_url ? (
     <img src={item.cover_url} crossOrigin="anonymous" alt="" loading="lazy" className={`object-cover ${className}`} />
@@ -94,7 +105,14 @@ export function Feed({ items }: { items: FeedItem[] }) {
                       </div>
                     ))}
                   </dl>
-                  <Dialog.Close className="mt-6 min-h-10 text-muted hover:text-ink">close</Dialog.Close>
+                  <div className="mt-6 flex items-center gap-5">
+                    {listenLinks(open).map(([label, href]) => (
+                      <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="min-h-10 content-center text-subtle hover:text-ink">
+                        {label}
+                      </a>
+                    ))}
+                    <Dialog.Close className="ml-auto min-h-10 text-muted hover:text-ink">close</Dialog.Close>
+                  </div>
                 </motion.div>
               </div>
             )}

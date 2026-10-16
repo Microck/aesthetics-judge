@@ -8,9 +8,10 @@
 // 2. Confirm against two catalogs: iTunes (called directly) and Deezer (through
 //    /api/catalog, since Deezer sends no CORS headers). Small artists are often on
 //    one and not the other. A result is accepted only if its artist appears in the
-//    original text; among those, the best score wins: shared words, plus a large
-//    bonus when its length matches the file within 3 s (length is the strongest
-//    evidence of *which* recording it is, e.g. live vs studio).
+//    original text; among those, the best score wins (see scoreResult): words
+//    shared with the file, minus title words the file never mentions ("Live Aid",
+//    "Mashup"), plus a bonus that grows as its length nears the file's (length is
+//    the strongest evidence of *which* recording it is, e.g. live vs studio).
 //    An accepted result replaces the guess: clean title, artist, album, year, cover.
 //    A hosted cover is needed even when the file embeds one, because the public
 //    feed can only show covers that live on the web.
@@ -119,6 +120,9 @@ function cleanTitle(title: string): string {
     .replace(/\[[^\]]*\]/g, "") // [Hullabaloo], [4K]
     .replace(/\((?:official|lyric|lyrics|audio|video|visualizer|hd|hq|4k|remaster)[^)]*\)/gi, "")
     .replace(/\s@\s.*$/, "") // "@ Le Zenith, Paris 2001"
+    // Unbracketed video junk ends the title: "Respect Official Video Winner",
+    // "GANGNAM STYLE M/V". Needs a word before it, so "Video Games" survives.
+    .replace(/(\S)\s+(?:official|lyrics?|(?:music\s+)?video|visuali[sz]er|m\/v|mv|hd|hq|4k)\b.*$/i, "$1")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -178,10 +182,10 @@ async function catalogMatch(artist: string, title: string, evidence: string, dur
     for (const result of results) {
       // The artist must be named somewhere in the file's own text.
       if (!normalize(evidence).includes(normalize(result.artistName))) continue;
-      const shared = tokens(`${result.trackName} ${result.collectionName}`).filter((word) => words.has(word)).length;
-      const sameLength = Math.abs(result.durationSec - duration) <= 3 ? 10 : 0;
-      const score = shared + sameLength;
-      if (score > bestScore) [best, bestScore] = [result, score];
+      // Catalogs list the original album before compilations of the same recording,
+      // so a later result must win clearly, not by a fraction of a second of length.
+      const score = scoreResult(result, words, duration);
+      if (score > bestScore + (best ? 1 : 0)) [best, bestScore] = [result, score];
     }
     if (best) {
       return {
@@ -194,6 +198,26 @@ async function catalogMatch(artist: string, title: string, evidence: string, dur
     }
   }
   return null;
+}
+
+// Title words that say nothing about which recording it is.
+const NEUTRAL_WORDS = new Set(["remaster", "remastered", "version", "feat", "single", "original"]);
+
+function scoreResult(result: CatalogResult, words: Set<string>, duration: number): number {
+  // Distinct words: a soundtrack or single named after the song ("Bohemian Rhapsody
+  // (The Original Soundtrack)") must not count the title twice. The artist's own name
+  // is already required above, so "Bob Dylan's Greatest Hits" earns nothing for it.
+  const artistWords = new Set(tokens(result.artistName));
+  const shared = new Set(tokens(`${result.trackName} ${result.collectionName}`).filter((word) => words.has(word) && !artistWords.has(word))).size;
+  // A version the file never mentions is a different recording: "(Live Aid)",
+  // "/ 2 Legit 2 Quit Mashup", "(Sped Up)".
+  const unmentioned = tokens(result.trackName).filter((word) => !words.has(word) && !NEUTRAL_WORDS.has(word) && !/^\d+$/.test(word)).length;
+  // Videos carry a few seconds of intro or outro, so closeness is graded rather than
+  // a hard cutoff: 10 points for the same length, none past 12 s off. Reissues of one
+  // recording differ by a second or so; that counts as equal.
+  const offBy = Math.max(0, Math.abs(result.durationSec - duration) - 2);
+  const length = Math.max(0, 10 - offBy);
+  return shared - 2 * unmentioned + length;
 }
 
 // Both catalogs cache raw answers in localStorage so re-judging a song never asks again.
