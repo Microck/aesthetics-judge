@@ -68,7 +68,7 @@ export function App() {
             if (worker.current === activeWorker) worker.current = null;
             reject(new Error(event.message || "The audio model worker failed. Try again."));
           };
-          worker.current!.onmessage = ({ data }: MessageEvent<WorkerEvent>) => {
+          activeWorker.onmessage = ({ data }: MessageEvent<WorkerEvent>) => {
             if (data.type === "model") update({ modelLoaded: data.loaded, modelTotal: data.total });
             if (data.type === "window") {
               windows.push(data.scores.CE);
@@ -78,7 +78,7 @@ export function App() {
             if (data.type === "error") reject(new Error(data.message));
           };
           // Copied, not transferred: identify() still reads pcm for fingerprinting.
-          worker.current!.postMessage({ type: "judge", pcm });
+          activeWorker.postMessage({ type: "judge", pcm });
         });
         const track = await trackPromise;
         setJob({ status: "done", track, scores, windows });

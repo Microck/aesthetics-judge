@@ -11,3 +11,29 @@ export function isCatalogResult(value: unknown): value is CatalogResult {
     typeof row.artworkUrl === "string" && typeof row.durationSec === "number" &&
     Number.isFinite(row.durationSec) && row.durationSec >= 0;
 }
+
+export function readCatalogStore(storage: Pick<Storage, "getItem">, name: string): Record<string, CatalogResult[]> {
+  try {
+    const value: unknown = JSON.parse(storage.getItem(`aesthetics-judge:${name}`) ?? "{}");
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    return Object.fromEntries(Object.entries(value).filter(([, rows]) => Array.isArray(rows))
+      .map(([term, rows]) => [term, (rows as unknown[]).filter(isCatalogResult)]));
+  } catch {
+    return {};
+  }
+}
+
+export function normalizeItunesResults(value: unknown): CatalogResult[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item: unknown) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as Record<string, unknown>;
+    const result = {
+      artistName: row.artistName, trackName: row.trackName,
+      collectionName: row.collectionName ?? "", releaseDate: row.releaseDate ?? "",
+      artworkUrl: typeof row.artworkUrl100 === "string" ? row.artworkUrl100.replace("100x100bb", "1200x1200bb") : "",
+      durationSec: typeof row.trackTimeMillis === "number" ? row.trackTimeMillis / 1000 : 0,
+    };
+    return isCatalogResult(result) ? [result] : [];
+  });
+}

@@ -19,7 +19,7 @@ import { parseBlob } from "music-metadata";
 
 import { SAMPLE_RATE } from "./audio";
 import { API_BASE } from "./feed";
-import { isCatalogResult, type CatalogResult } from "./catalog";
+import { isCatalogResult, readCatalogStore, normalizeItunesResults, type CatalogResult } from "./catalog";
 
 export type Track = {
   title: string;
@@ -222,14 +222,15 @@ function scoreResult(result: CatalogResult, words: Set<string>, duration: number
 
 // Both catalogs cache raw answers in localStorage so re-judging a song never asks again.
 function cached(name: string, term: string): CatalogResult[] | undefined {
-  return JSON.parse(localStorage.getItem(`aesthetics-judge:${name}`) ?? "{}")[term];
+  try { return readCatalogStore(localStorage, name)[term]; } catch { return undefined; }
 }
 function remember(name: string, term: string, results: CatalogResult[]) {
-  const store: Record<string, CatalogResult[]> = JSON.parse(localStorage.getItem(`aesthetics-judge:${name}`) ?? "{}");
+  let store: Record<string, CatalogResult[]>;
+  try { store = readCatalogStore(localStorage, name); } catch { return; }
   // Keep it bounded: drop the oldest entries past 100.
   const keys = Object.keys(store);
   if (keys.length >= 100) for (const old of keys.slice(0, keys.length - 99)) delete store[old];
-  localStorage.setItem(`aesthetics-judge:${name}`, JSON.stringify({ ...store, [term]: results }));
+  try { localStorage.setItem(`aesthetics-judge:${name}`, JSON.stringify({ ...store, [term]: results })); } catch { /* optional cache: quota/privacy failures must not discard scores */ }
 }
 
 // iTunes Search allows roughly 20 calls/minute per IP. Calls come from each
@@ -251,17 +252,7 @@ async function itunesSearch(term: string): Promise<CatalogResult[]> {
     const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(key)}&entity=song&limit=10`);
     if (!response.ok) return []; // don't cache failures (403 means Apple is throttling)
     const { results = [] } = await response.json();
-    const normalized: CatalogResult[] = results.map(
-      (r: { artistName: string; trackName: string; collectionName?: string; releaseDate?: string; artworkUrl100: string; trackTimeMillis?: number }) => ({
-        artistName: r.artistName,
-        trackName: r.trackName,
-        collectionName: r.collectionName ?? "",
-        releaseDate: r.releaseDate ?? "",
-        // Artwork URLs encode their size; 1200px is plenty for the share card.
-        artworkUrl: r.artworkUrl100.replace("100x100bb", "1200x1200bb"),
-        durationSec: (r.trackTimeMillis ?? 0) / 1000,
-      }),
-    );
+    const normalized = normalizeItunesResults(results);
     remember("itunes-v3", key, normalized);
     return normalized;
   } catch {

@@ -31,6 +31,8 @@ test("worker retry finishes even when optional catalog data is malformed",async(
  await browser.route("**/api/**",route=>route.fulfill({json:route.request.url.endsWith('/feed')?[]:{}}));
  await browser.route("https://itunes.apple.com/**",route=>route.fulfill({json:{results:[]}}));
  await browser.addInitScript(()=>{
+  localStorage.setItem("aesthetics-judge:itunes-v3", "{broken");
+  localStorage.setItem("aesthetics-judge:deezer", "{broken");
   let count=0;
   class FakeWorker {
    id=++count; onmessage:((event:{data:unknown})=>void)|null=null; onerror:((event:{message:string})=>void)|null=null;
