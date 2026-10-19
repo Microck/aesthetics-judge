@@ -59,6 +59,11 @@ export async function fetchAudio(link: string, { url, authorization }: FetcherSe
 }
 
 function filenameFrom(response: Response): string | null {
-  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(response.headers.get("Content-Disposition") ?? "");
-  return match ? decodeURIComponent(match[1]) : null;
+  const header = response.headers.get("Content-Disposition") ?? "";
+  const plain = /(?:^|;)\s*filename=(?:"([^"]*)"|([^;]*))/i.exec(header);
+  const fallback = (plain?.[1] ?? plain?.[2]?.trim()) || null;
+  const extended = /(?:^|;)\s*filename\*=UTF-8''(?:"([^"]*)"|([^;]*))/i.exec(header);
+  if (!extended) return fallback;
+  try { return decodeURIComponent(extended[1] ?? extended[2].trim()) || fallback; }
+  catch { return fallback; }
 }

@@ -8,7 +8,10 @@
     "typecheck": "tsc -p tsconfig.json && tsc -p api/tsconfig.json",
     "db:local": "wrangler d1 execute aesthetics-judge --local --file=schema.sql",
     "build:prod": "bun run build && rm -rf dist/models",
-    "api": "wrangler dev --port 8787 --var SITE_ORIGIN:http://127.0.0.1:5173"
+    "api": "wrangler dev --port 8787 --var SITE_ORIGIN:http://127.0.0.1:5173",
+    "preview": "vite preview",
+    "test": "bun test tests/*.test.ts",
+    "test:e2e": "E2E_TELEMETRY_DISABLED=1 e2e run"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -21,10 +24,12 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261016.1",
+    "@e2e-dev/web": "0.15.2",
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "e2e": "0.21.2",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",

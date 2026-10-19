@@ -47,6 +47,7 @@ export function UploadControl({ onFile, disabled }: { onFile: (file: File) => vo
       <input
         ref={input}
         type="file"
+        aria-label="Audio file"
         accept={ACCEPT}
         hidden
         onChange={(event) => {

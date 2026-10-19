@@ -6,3 +6,4 @@ public/models/*.onnx
 .dev.vars
 .env.production
 *.tsbuildinfo
+.e2e/
