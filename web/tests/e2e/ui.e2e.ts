@@ -26,7 +26,8 @@ test("fetcher settings can be saved and cleared without contacting the fetcher",
  await expect(screen.getByRole("button","fetcher",{exact:true})).toBeVisible();
 });
 
-test("worker startup failure releases busy state and a second upload can finish",async({app,browser,screen})=>{
+test("worker retry finishes even when optional catalog data is malformed",async({app,browser,screen})=>{
+ // Deliberately return a malformed catalog object: identification is optional.
  await browser.route("**/api/**",route=>route.fulfill({json:route.request.url.endsWith('/feed')?[]:{}}));
  await browser.route("https://itunes.apple.com/**",route=>route.fulfill({json:{results:[]}}));
  await browser.addInitScript(()=>{

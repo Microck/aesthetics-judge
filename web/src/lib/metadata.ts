@@ -19,6 +19,7 @@ import { parseBlob } from "music-metadata";
 
 import { SAMPLE_RATE } from "./audio";
 import { API_BASE } from "./feed";
+import { isCatalogResult, type CatalogResult } from "./catalog";
 
 export type Track = {
   title: string;
@@ -168,7 +169,6 @@ async function fingerprintLookup(pcm: Float32Array, duration: number): Promise<P
 }
 
 // One shape for both catalogs; api/catalog.ts returns Deezer results in it directly.
-type CatalogResult = { artistName: string; trackName: string; collectionName: string; releaseDate: string; artworkUrl: string; durationSec: number };
 type CatalogMatch = Pick<Track, "title" | "artist" | "album" | "year" | "coverUrl">;
 
 async function catalogMatch(artist: string, title: string, evidence: string, duration: number): Promise<CatalogMatch | null> {
@@ -176,7 +176,7 @@ async function catalogMatch(artist: string, title: string, evidence: string, dur
   const words = new Set(tokens(evidence));
   // Artist + title first; title alone catches files whose artist guess is wrong.
   for (const term of artist ? [`${artist} ${title}`, title] : [title]) {
-    const results = (await Promise.all([itunesSearch(term), deezerSearch(term)])).flat();
+    const results = (await Promise.all([itunesSearch(term), deezerSearch(term)])).flat().filter(isCatalogResult);
     let best: CatalogResult | null = null;
     let bestScore = 0;
     for (const result of results) {
