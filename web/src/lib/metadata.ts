@@ -19,7 +19,7 @@ import { parseBlob } from "music-metadata";
 
 import { SAMPLE_RATE } from "./audio";
 import { API_BASE } from "./feed";
-import { isCatalogResult, readCatalogStore, normalizeItunesResults, type CatalogResult } from "./catalog";
+import { isCatalogResult, readCatalogStore, itunesResultsForCache, type CatalogResult } from "./catalog";
 
 export type Track = {
   title: string;
@@ -251,8 +251,9 @@ async function itunesSearch(term: string): Promise<CatalogResult[]> {
   try {
     const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(key)}&entity=song&limit=10`);
     if (!response.ok) return []; // don't cache failures (403 means Apple is throttling)
-    const { results = [] } = await response.json();
-    const normalized = normalizeItunesResults(results);
+    const { results } = await response.json();
+    const normalized = itunesResultsForCache(results);
+    if (normalized === undefined) return [];
     remember("itunes-v3", key, normalized);
     return normalized;
   } catch {

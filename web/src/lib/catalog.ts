@@ -40,3 +40,10 @@ export function normalizeItunesResults(value: unknown): CatalogResult[] {
     return isCatalogResult(result) ? [result] : [];
   });
 }
+
+// Invalid nonempty responses are retryable misses, not durable empty results.
+export function itunesResultsForCache(value: unknown): CatalogResult[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const normalized = normalizeItunesResults(value);
+  return value.length > 0 && normalized.length === 0 ? undefined : normalized;
+}

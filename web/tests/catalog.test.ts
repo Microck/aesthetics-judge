@@ -27,3 +27,10 @@ test("fully corrupt cached rows are misses while genuine empty results stay cach
  const raw=JSON.stringify({empty:[],broken:[null,{}],mixed:[null,valid]});
  expect(readCatalogStore({getItem:()=>raw},"itunes-v3")).toEqual({empty:[],mixed:[valid]});
 });
+
+import { itunesResultsForCache } from "../src/lib/catalog";
+test("malformed upstream results remain retryable while genuine empty results cache", () => {
+ for (const value of [undefined, null, {}, [null, {}]]) expect(itunesResultsForCache(value)).toBeUndefined();
+ expect(itunesResultsForCache([])).toEqual([]);
+ expect(itunesResultsForCache([null,{artistName:"Artist",trackName:"Title"}])).toHaveLength(1);
+});
