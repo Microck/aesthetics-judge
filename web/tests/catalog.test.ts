@@ -3,7 +3,7 @@ import { isCatalogResult } from "../src/lib/catalog";
 test("only complete, usable optional catalog rows reach matching",()=>{
  const valid={artistName:"Artist",trackName:"Title",collectionName:"",releaseDate:"",artworkUrl:"",durationSec:1};
  expect(isCatalogResult(valid)).toBe(true);
- for(const value of [null,{},[],{...valid,artistName:undefined},{...valid,releaseDate:null},{...valid,durationSec:NaN},{...valid,durationSec:-1}])expect(isCatalogResult(value)).toBe(false);
+ for(const value of [null,{},[],{...valid,artistName:undefined},{...valid,artistName:""},{...valid,artistName:"  "},{...valid,trackName:""},{...valid,trackName:" \t "},{...valid,releaseDate:null},{...valid,durationSec:NaN},{...valid,durationSec:-1}])expect(isCatalogResult(value)).toBe(false);
 });
 
 import { readCatalogStore, normalizeItunesResults } from "../src/lib/catalog";
