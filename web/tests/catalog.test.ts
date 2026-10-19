@@ -21,3 +21,9 @@ test("malformed iTunes rows do not discard usable results", () => {
  expect(rows[2].artworkUrl).toContain("1200x1200bb");
  expect(normalizeItunesResults({})).toEqual([]);
 });
+
+test("fully corrupt cached rows are misses while genuine empty results stay cached", () => {
+ const valid={artistName:"Artist",trackName:"Title",collectionName:"",releaseDate:"",artworkUrl:"",durationSec:1};
+ const raw=JSON.stringify({empty:[],broken:[null,{}],mixed:[null,valid]});
+ expect(readCatalogStore({getItem:()=>raw},"itunes-v3")).toEqual({empty:[],mixed:[valid]});
+});

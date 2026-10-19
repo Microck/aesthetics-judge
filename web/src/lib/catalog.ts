@@ -16,8 +16,11 @@ export function readCatalogStore(storage: Pick<Storage, "getItem">, name: string
   try {
     const value: unknown = JSON.parse(storage.getItem(`aesthetics-judge:${name}`) ?? "{}");
     if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-    return Object.fromEntries(Object.entries(value).filter(([, rows]) => Array.isArray(rows))
-      .map(([term, rows]) => [term, (rows as unknown[]).filter(isCatalogResult)]));
+    return Object.fromEntries(Object.entries(value).flatMap(([term, rows]) => {
+      if (!Array.isArray(rows)) return [];
+      const valid = rows.filter(isCatalogResult);
+      return rows.length > 0 && valid.length === 0 ? [] : [[term, valid]];
+    }));
   } catch {
     return {};
   }
