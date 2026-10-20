@@ -7,6 +7,9 @@ for(const [header,name] of [
  ["attachment; filename=backup.wav; filename*=UTF-8''caf%C3%A9.wav",'café.wav'],
  ["attachment; filename=backup.wav; filename*=UTF-8''bad%ZZ.wav",'backup.wav'],
  ['attachment; filename="semi;colon.wav"','semi;colon.wav'],
+ ["attachment; filename=resume.wav; filename*=UTF-8'en'caf%C3%A9.wav",'café.wav'],
+ ["attachment; filename=resume.wav; filename*=UTF-8'en-US'caf%C3%A9.wav",'café.wav'],
+ ["attachment; filename=resume.wav; filename*=UTF-8'en'bad%ZZ.wav",'resume.wav'],
 ])test(`download filename ${name}`,async()=>{
  globalThis.fetch=async()=>new Response("fixture",{headers:{'Content-Type':'audio/wav','Content-Disposition':header}});
  expect((await fetchAudio('https://fixture.invalid/song',{url:'https://fixture.invalid/fetch',authorization:''})).name).toBe(name);

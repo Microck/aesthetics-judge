@@ -62,7 +62,7 @@ function filenameFrom(response: Response): string | null {
   const header = response.headers.get("Content-Disposition") ?? "";
   const plain = /(?:^|;)\s*filename=(?:"([^"]*)"|([^;]*))/i.exec(header);
   const fallback = (plain?.[1] ?? plain?.[2]?.trim()) || null;
-  const extended = /(?:^|;)\s*filename\*=UTF-8''(?:"([^"]*)"|([^;]*))/i.exec(header);
+  const extended = /(?:^|;)\s*filename\*=UTF-8'[A-Za-z0-9-]*'(?:"([^"]*)"|([^;]*))/i.exec(header);
   if (!extended) return fallback;
   try { return decodeURIComponent(extended[1] ?? extended[2].trim()) || fallback; }
   catch { return fallback; }
