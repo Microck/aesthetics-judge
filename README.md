@@ -57,3 +57,12 @@ bun run dev    # site on :5173
 - Model: [Audiobox Aesthetics](https://github.com/facebookresearch/audiobox-aesthetics) by Meta, CC-BY 4.0 ([paper](https://arxiv.org/abs/2502.05139)).
 - Font: [Departure Mono](https://departuremono.com) by Helena Zhang, SIL OFL.
 - Catalog data: iTunes Search API, Deezer API, AcoustID, MusicBrainz, Cover Art Archive.
+
+## Regression and browser tests
+
+In `web/`, run `bun install --frozen-lockfile`, `bun run test`, `bun run build`,
+`bunx e2e-web install chromium`, then `bun run test:e2e`.
+The pinned tester-army/e2e suite is deterministic and makes no AI agent calls.
+It uses a generated local WAV, simulated worker results/errors, and intercepted
+catalog/feed responses. It does not publish to the real feed or establish model
+accuracy. Separate unit tests cover AudioContext cleanup and download filenames.

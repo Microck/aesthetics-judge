@@ -56,10 +56,19 @@ export function App() {
 
         // Identification runs on the network while the model runs on the CPU.
         const trackPromise = identify(file, pcm);
+        // Identification can fail before inference finishes. Keep the original
+        // promise for await below, but never leave its rejection unobserved.
+        void trackPromise.catch(() => {});
         worker.current ??= new Worker(new URL("./lib/model.worker.ts", import.meta.url), { type: "module" });
         const windows: number[] = [];
         const scores = await new Promise<Scores>((resolve, reject) => {
-          worker.current!.onmessage = ({ data }: MessageEvent<WorkerEvent>) => {
+          const activeWorker = worker.current!;
+          activeWorker.onerror = (event) => {
+            activeWorker.terminate();
+            if (worker.current === activeWorker) worker.current = null;
+            reject(new Error(event.message || "The audio model worker failed. Try again."));
+          };
+          activeWorker.onmessage = ({ data }: MessageEvent<WorkerEvent>) => {
             if (data.type === "model") update({ modelLoaded: data.loaded, modelTotal: data.total });
             if (data.type === "window") {
               windows.push(data.scores.CE);
@@ -69,7 +78,7 @@ export function App() {
             if (data.type === "error") reject(new Error(data.message));
           };
           // Copied, not transferred: identify() still reads pcm for fingerprinting.
-          worker.current!.postMessage({ type: "judge", pcm });
+          activeWorker.postMessage({ type: "judge", pcm });
         });
         const track = await trackPromise;
         setJob({ status: "done", track, scores, windows });
